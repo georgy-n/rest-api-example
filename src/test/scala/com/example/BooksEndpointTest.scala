@@ -14,7 +14,10 @@ import sttp.model.StatusCode
 class BooksEndpointTest extends AsyncFlatSpec with Matchers {
   it should "work" in {
     // given
-    val backendStub: SttpBackend[IO, Any] = TapirStubInterpreter(SttpBackendStub[IO, Any](new CatsMonadError[IO]))
+    val backendStub: SttpBackend[IO, Any] = TapirStubInterpreter(
+      Main.customOptions,
+      SttpBackendStub[IO, Any](new CatsMonadError[IO])
+    )
       .whenServerEndpoint(BooksApi.booksListingServerEndpoint)
       .thenRunLogic()
       .backend()
@@ -27,7 +30,9 @@ class BooksEndpointTest extends AsyncFlatSpec with Matchers {
       .unsafeRunSync()
 
     // then
-    response.body shouldBe Right("""[{"title":"foo","year":2023,"author":{"name":"baz"}}]""")
+    response.body shouldBe Right(
+      """[{"title":"foo","year":2023,"author":{"name":"baz"}}]"""
+    )
     response.code shouldBe StatusCode.Ok
   }
 }

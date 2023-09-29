@@ -9,6 +9,7 @@ import io.circe.generic.auto._
 import sttp.tapir.generic.auto._
 import sttp.tapir.swagger.bundle.SwaggerInterpreter
 import com.comcast.ip4s.{Host, Port}
+import com.example.books.api.BooksApi
 import org.http4s.ember.server.EmberServerBuilder
 import org.http4s.server.Router
 import sttp.model.StatusCode
@@ -25,21 +26,22 @@ object Main extends IOApp {
     .fromServerEndpoints[IO](apiEndpoints, "rest-api-example", "1.0.0")
   val all: List[ServerEndpoint[Any, IO]] = apiEndpoints ++ docEndpoints
 
-  case class MyFailure(msg: String)
+  case class MyFailure(defaultCause: String)
   def myFailureResponse(m: String): ValuedEndpointOutput[_] =
     ValuedEndpointOutput(jsonBody[MyFailure], MyFailure(m))
-  override def run(args: List[String]): IO[ExitCode] = {
-    val serverOptions: Http4sServerOptions[IO] =
-      Http4sServerOptions
-        .customiseInterceptors[IO]
-        .defaultHandlers(myFailureResponse)
-        .exceptionHandler( new ExceptionHandler[IO] {
-          override def apply(ctx: ExceptionContext)(implicit monad: MonadError[IO]): IO[Option[ValuedEndpointOutput[_]]] =
-            IO.pure(ValuedEndpointOutput(statusCode.and(stringBody), (StatusCode.InternalServerError, ctx.e.toString)).some)
-        })
-        .options
 
-    val routes = Http4sServerInterpreter[IO](serverOptions)
+  val customOptions = Http4sServerOptions
+    .customiseInterceptors[IO]
+    .defaultHandlers(myFailureResponse)
+    .exceptionHandler(new ExceptionHandler[IO] {
+      override def apply(ctx: ExceptionContext)(implicit monad: MonadError[IO]): IO[Option[ValuedEndpointOutput[_]]] =
+        IO.pure(ValuedEndpointOutput(
+          statusCode.and(jsonBody[MyFailure]),
+          (StatusCode.InternalServerError, MyFailure(ctx.e.toString))).some)
+    })
+
+  override def run(args: List[String]): IO[ExitCode] = {
+    val routes = Http4sServerInterpreter[IO](customOptions.options)
       .toRoutes(all)
 
     val port = 1337
