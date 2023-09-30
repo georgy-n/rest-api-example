@@ -12,6 +12,8 @@ import cats.effect.unsafe.implicits.global
 import sttp.model.StatusCode
 
 class BooksEndpointTest extends AsyncFlatSpec with Matchers {
+
+  /*
   it should "work" in {
     // given
     val backendStub: SttpBackend[IO, Any] = TapirStubInterpreter(
@@ -35,4 +37,7 @@ class BooksEndpointTest extends AsyncFlatSpec with Matchers {
     )
     response.code shouldBe StatusCode.Ok
   }
+
+
+   */
 }

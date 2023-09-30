@@ -10,6 +10,7 @@ import sttp.tapir.generic.auto._
 import sttp.tapir.swagger.bundle.SwaggerInterpreter
 import com.comcast.ip4s.{Host, Port}
 import com.example.books.api.BooksApi
+import com.example.domain.ApiError
 import org.http4s.ember.server.EmberServerBuilder
 import org.http4s.server.Router
 import sttp.model.StatusCode
@@ -20,24 +21,24 @@ import sttp.tapir.server.model.ValuedEndpointOutput
 
 object Main extends IOApp {
 
-  val apiEndpoints: List[ServerEndpoint[Any, IO]] = List(BooksApi.booksListingServerEndpoint, BooksApi.bookServerEndpoint)
-
   val docEndpoints: List[ServerEndpoint[Any, IO]] = SwaggerInterpreter()
-    .fromServerEndpoints[IO](apiEndpoints, "rest-api-example", "1.0.0")
-  val all: List[ServerEndpoint[Any, IO]] = apiEndpoints ++ docEndpoints
+    .fromServerEndpoints[IO](BooksApi.apiEndpoints, "rest-api-example", "1.0.0")
 
-  case class MyFailure(defaultCause: String)
-  def myFailureResponse(m: String): ValuedEndpointOutput[_] =
-    ValuedEndpointOutput(jsonBody[MyFailure], MyFailure(m))
+  val all: List[ServerEndpoint[Any, IO]] = BooksApi.apiEndpoints ++ docEndpoints
 
   val customOptions = Http4sServerOptions
     .customiseInterceptors[IO]
-    .defaultHandlers(myFailureResponse)
+//    .defaultHandlers(myFailureResponse)
     .exceptionHandler(new ExceptionHandler[IO] {
-      override def apply(ctx: ExceptionContext)(implicit monad: MonadError[IO]): IO[Option[ValuedEndpointOutput[_]]] =
-        IO.pure(ValuedEndpointOutput(
-          statusCode.and(jsonBody[MyFailure]),
-          (StatusCode.InternalServerError, MyFailure(ctx.e.toString))).some)
+      override def apply(ctx: ExceptionContext)(implicit
+          monad: MonadError[IO]
+      ): IO[Option[ValuedEndpointOutput[_]]] =
+        monad.unit(
+          ValuedEndpointOutput(
+            statusCode.and(jsonBody[ApiError]),
+            (StatusCode.VariantAlsoNegotiates, ApiError(ctx.e.toString))
+          ).some
+        )
     })
 
   override def run(args: List[String]): IO[ExitCode] = {
@@ -54,7 +55,9 @@ object Main extends IOApp {
       .build
       .use { server =>
         for {
-          _ <- IO.println(s"Go to http://localhost:${server.address.getPort}/docs to open SwaggerUI. Press ENTER key to exit.")
+          _ <- IO.println(
+            s"Go to http://localhost:${server.address.getPort}/docs to open SwaggerUI. Press ENTER key to exit."
+          )
           _ <- IO.readLine
         } yield ()
       }
