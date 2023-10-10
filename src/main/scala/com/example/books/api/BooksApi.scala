@@ -3,8 +3,8 @@ package com.example.books.api
 import cats.effect.IO
 import cats.syntax.all._
 import com.example.books.domain
-import com.example.books.domain.{Author, Book}
-import com.example.books.service._
+import com.example.books.domain._
+import com.example.books.handler._
 import com.example.domain.{ApiError, CommonApiError}
 import com.example.server.basicEndpoint
 import sttp.tapir._
@@ -29,21 +29,87 @@ object BooksApi {
       .in(path[String]("id"))
       .out(jsonBody[Book])
       .errorOutVariants(
-        oneOfVariant(statusCode(StatusCode.NotFound).and(jsonBody[NotFound])),
-        oneOfVariant(statusCode(StatusCode.ServiceUnavailable).and(jsonBody[Failed]))
+        oneOfVariant(
+          statusCode(StatusCode.NotFound).and(jsonBody[BookError.NotFound])
+        ),
+        oneOfVariant(
+          statusCode(StatusCode.ServiceUnavailable)
+            .and(jsonBody[BookError.Failed])
+        )
+      )
+
+  val createBook: PublicEndpoint[BookForm, CommonApiError, Book, Any] =
+    basicEndpoint.post
+      .in("books")
+      .in(jsonBody[BookForm])
+      .out(jsonBody[Book])
+      .errorOutVariants(
+        oneOfVariant(
+          statusCode(StatusCode.NotFound).and(jsonBody[CreateBookError.BadId])
+        ),
+        oneOfVariant(
+          statusCode(StatusCode.BadRequest)
+            .and(jsonBody[CreateBookError.WrongTitle])
+        )
+      )
+
+  val deleteBook: PublicEndpoint[String, CommonApiError, Unit, Any] =
+    basicEndpoint.delete
+      .in("books")
+      .in(path[String]("id"))
+      .errorOutVariants(
+        oneOfVariant(
+          statusCode(StatusCode.NotFound)
+            .and(jsonBody[DeleteBookError.NotFound])
+        ),
+        oneOfVariant(
+          statusCode(StatusCode.ServiceUnavailable)
+            .and(jsonBody[DeleteBookError.InternalError])
+        )
+      )
+
+  val updateBook: PublicEndpoint[UpdateBookForm, CommonApiError, Unit, Any] =
+    basicEndpoint.patch
+      .in("books")
+      .in(jsonBody[UpdateBookForm])
+      .errorOutVariants(
+        oneOfVariant(
+          statusCode(StatusCode.NotFound)
+            .and(jsonBody[UpdateBookError.NotFound])
+        ),
+        oneOfVariant(
+          statusCode(StatusCode.BadRequest).and(jsonBody[UpdateBookError.BadId])
+        )
       )
 
   val booksListingServerEndpoint: ServerEndpoint[Any, IO] =
     BooksApi.booksListing.serverLogicSuccess(_ => handler.getBooks)
 
   val bookServerEndpoint: ServerEndpoint[Any, IO] =
-    BooksApi.book.serverLogic(id => handler.getBook(id).widen[Either[CommonApiError, Book]])
+    BooksApi.book.serverLogic(id =>
+      handler.getBook(id).widen[Either[CommonApiError, Book]]
+    )
 
-  val createBook: PublicEndpoint[Unit, Unit, List[Book], Any] =
-    endpoint.get
-      .in("books" / "list" / "all")
-      .out(jsonBody[List[Book]])
+  val createBookServerEndpoint: ServerEndpoint[Any, IO] =
+    BooksApi.createBook.serverLogic(form =>
+      handler.createBook(form).widen[Either[CommonApiError, Book]]
+    )
 
+  val deleteBookServerEndpoint: ServerEndpoint[Any, IO] =
+    BooksApi.deleteBook.serverLogic(id =>
+      handler.deleteBook(id).widen[Either[CommonApiError, Unit]]
+    )
 
-  val apiEndpoints: List[ServerEndpoint[Any, IO]] = List(booksListingServerEndpoint, bookServerEndpoint)
+  val updateBookServerEndpoint: ServerEndpoint[Any, IO] =
+    BooksApi.updateBook.serverLogic(form =>
+      handler.updateBook(form).widen[Either[CommonApiError, Unit]]
+    )
+
+  val apiEndpoints: List[ServerEndpoint[Any, IO]] = List(
+    booksListingServerEndpoint,
+    bookServerEndpoint,
+    createBookServerEndpoint,
+    deleteBookServerEndpoint,
+    updateBookServerEndpoint
+  )
 }
