@@ -16,7 +16,11 @@ import sttp.tapir.server.ServerEndpoint
 
 object BooksApi {
 
-  val handler = new BookHandlerImpl[IO]
+  val getBookHandler = new GetBookHandler[IO]
+  val allBooksHandler = new AllBooksHandler[IO]
+  val deleteBookHandler = new DeleteBookHandler[IO]
+  val updateBookHandler = new UpdateBookHandler[IO]
+  val createBookHandler = new CreateBookHandler[IO]
 
   val booksListing: PublicEndpoint[Unit, Unit, List[Book], Any] =
     endpoint.get
@@ -83,26 +87,26 @@ object BooksApi {
       )
 
   val booksListingServerEndpoint: ServerEndpoint[Any, IO] =
-    BooksApi.booksListing.serverLogicSuccess(_ => handler.getBooks)
+    BooksApi.booksListing.serverLogic(allBooksHandler.handle)
 
   val bookServerEndpoint: ServerEndpoint[Any, IO] =
     BooksApi.book.serverLogic(id =>
-      handler.getBook(id).widen[Either[CommonApiError, Book]]
+      getBookHandler.handle(id).widen[Either[CommonApiError, Book]]
     )
 
   val createBookServerEndpoint: ServerEndpoint[Any, IO] =
     BooksApi.createBook.serverLogic(form =>
-      handler.createBook(form).widen[Either[CommonApiError, Book]]
+      createBookHandler.handle(form).widen[Either[CommonApiError, Book]]
     )
 
   val deleteBookServerEndpoint: ServerEndpoint[Any, IO] =
     BooksApi.deleteBook.serverLogic(id =>
-      handler.deleteBook(id).widen[Either[CommonApiError, Unit]]
+      deleteBookHandler.handle(id).widen[Either[CommonApiError, Unit]]
     )
 
   val updateBookServerEndpoint: ServerEndpoint[Any, IO] =
     BooksApi.updateBook.serverLogic(form =>
-      handler.updateBook(form).widen[Either[CommonApiError, Unit]]
+      updateBookHandler.handle(form).widen[Either[CommonApiError, Unit]]
     )
 
   val apiEndpoints: List[ServerEndpoint[Any, IO]] = List(
