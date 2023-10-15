@@ -2,16 +2,15 @@ package com.example.books.api
 
 import cats.effect.IO
 import cats.syntax.all._
-import com.example.books.domain
 import com.example.books.domain._
 import com.example.books.handler._
-import com.example.domain.{ApiError, CommonApiError}
+import com.example.domain.CommonApiError
 import com.example.server.basicEndpoint
-import sttp.tapir._
-import sttp.tapir.json.circe.jsonBody
 import io.circe.generic.auto._
 import sttp.model.StatusCode
+import sttp.tapir._
 import sttp.tapir.generic.auto._
+import sttp.tapir.json.circe.jsonBody
 import sttp.tapir.server.ServerEndpoint
 
 object BooksApi {
