@@ -14,7 +14,8 @@ val dependency = Seq(
   "com.softwaremill.sttp.tapir" %% "tapir-http4s-server" % "1.7.2",
   "org.http4s" %% "http4s-ember-server" % "0.23.23",
   "com.softwaremill.sttp.tapir" %% "tapir-sttp-stub-server" % "1.7.3",
-  "org.scalatest" %% "scalatest" % "3.2.17" % "test"
+  "org.scalatest" %% "scalatest" % "3.2.17" % "test",
+  "org.typelevel" %% "cats-mtl" % "1.3.0"
 )
 lazy val restApiExample = (project in file("."))
   .settings(

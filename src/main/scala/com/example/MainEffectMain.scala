@@ -1,30 +1,33 @@
 package com.example
 
+import cats.effect.unsafe.IORuntime
+import cats.effect.{ExitCode, IO}
 import cats.syntax.all._
-import cats.effect.{ExitCode, IO, IOApp}
-import sttp.tapir._
-import sttp.tapir.json.circe.jsonBody
-import sttp.tapir.server.ServerEndpoint
-import io.circe.generic.auto._
-import sttp.tapir.generic.auto._
-import sttp.tapir.swagger.bundle.SwaggerInterpreter
 import com.comcast.ip4s.{Host, Port}
 import com.example.books.api.BooksApi
 import com.example.domain.ApiError
+import com.example.experimental.api.ExperimentalApi
+import io.circe.generic.auto._
 import org.http4s.ember.server.EmberServerBuilder
 import org.http4s.server.Router
 import sttp.model.StatusCode
 import sttp.monad.MonadError
+import sttp.tapir._
+import sttp.tapir.generic.auto._
+import sttp.tapir.json.circe.jsonBody
+import sttp.tapir.server.ServerEndpoint
 import sttp.tapir.server.http4s.{Http4sServerInterpreter, Http4sServerOptions}
 import sttp.tapir.server.interceptor.exception.{ExceptionContext, ExceptionHandler}
 import sttp.tapir.server.model.ValuedEndpointOutput
+import sttp.tapir.swagger.bundle.SwaggerInterpreter
 
-object Main extends IOApp {
+object MainEffectMain extends App {
+  implicit val ioRuntime = IORuntime.builder().build()
 
   val docEndpoints: List[ServerEndpoint[Any, IO]] = SwaggerInterpreter()
-    .fromServerEndpoints[IO](BooksApi.apiEndpoints, "rest-api-example", "1.0.0")
+    .fromServerEndpoints[IO](ExperimentalApi.mainEffectEndpoints, "rest-api-example", "1.0.0")
 
-  val all: List[ServerEndpoint[Any, IO]] = BooksApi.apiEndpoints ++ docEndpoints
+  val all: List[ServerEndpoint[Any, IO]] = ExperimentalApi.mainEffectEndpoints ++ docEndpoints
 
   val customOptions = Http4sServerOptions
     .customiseInterceptors[IO]
@@ -41,26 +44,19 @@ object Main extends IOApp {
         )
     })
 
-  override def run(args: List[String]): IO[ExitCode] = {
     val routes = Http4sServerInterpreter[IO](customOptions.options)
       .toRoutes(all)
 
     val port = 1337
 
-    EmberServerBuilder
+    val server = EmberServerBuilder
       .default[IO]
       .withHost(Host.fromString("localhost").get)
       .withPort(Port.fromInt(port).get)
       .withHttpApp(Router("/" -> routes).orNotFound)
       .build
-      .use { server =>
-        for {
-          _ <- IO.println(
-            s"Go to http://localhost:${server.address.getPort}/docs to open SwaggerUI. Press ENTER key to exit."
-          )
-//          _ <- IO.readLine
-        } yield ()
-      }
+      .use(_ => (IO.never))
       .as(ExitCode.Success)
-  }
+
+    server.unsafeRunSync()
 }
