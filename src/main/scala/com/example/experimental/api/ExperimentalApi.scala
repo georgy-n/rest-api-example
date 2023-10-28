@@ -18,7 +18,9 @@ object ExperimentalApi {
     endpoint
       .errorOut(
         oneOf[CommonApiError](
-          oneOfDefaultVariant(statusCode(StatusCode.InternalServerError).and(jsonBody[ApiError]))
+          oneOfDefaultVariant(
+            statusCode(StatusCode.InternalServerError).and(jsonBody[ApiError])
+          )
         )
       )
 
@@ -29,15 +31,12 @@ object ExperimentalApi {
     basicEndpoint.get
       .in("trackingId")
       .out(jsonBody[String])
-//      .errorOutVariantPrepend(
-//        oneOfVariant(StatusCode.BadRequest, jsonBody[CreateBookError.BadId])
-//      )
-//      .errorOutVariantPrepend(
-//        oneOfVariant(StatusCode.NotFound, jsonBody[CreateBookError.WrongTitle])
-//      )
-      .errorOutVariants(
-        oneOfVariant(StatusCode.NotFound, jsonBody[CreateBookError.WrongTitle]),
-        oneOfVariant(StatusCode.BadRequest, jsonBody[CreateBookError.BadId]),
+      .errorOutVariantsFromCurrent(err =>
+        List(
+          oneOfVariant(StatusCode.NotFound,jsonBody[CreateBookError.WrongTitle]),
+          oneOfVariant(StatusCode.BadRequest, jsonBody[CreateBookError.BadId]),
+          oneOfDefaultVariant(err)
+        )
       )
 
   import cats.syntax.all._

@@ -40,6 +40,8 @@ class ExperimentalEndpointTest extends AsyncFlatSpec with Matchers {
     val response = mkResponse(backendStub)
 
     response.code shouldBe StatusCode.NotFound
+    response.body shouldBe Left("""{"what":"wrong title"}""")
+
   }
 
   it should "throw BadId" in {
@@ -65,7 +67,6 @@ class ExperimentalEndpointTest extends AsyncFlatSpec with Matchers {
     val response = mkResponse(backendStub)
 
     response.code shouldBe StatusCode(1337)
-
   }
 
   it should "throw ApiError" in {
