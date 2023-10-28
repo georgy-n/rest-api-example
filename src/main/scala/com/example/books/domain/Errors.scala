@@ -4,9 +4,9 @@ import com.example.domain.CommonApiError
 
 sealed trait CreateBookError extends CommonApiError
 object CreateBookError {
-  case class WrongTitle(what: String) extends BookError
+  case class WrongTitle(what: String) extends CreateBookError
 
-  case class BadId(why: String) extends BookError
+  case class BadId(why: String) extends CreateBookError
 }
 
 sealed trait DeleteBookError extends CommonApiError

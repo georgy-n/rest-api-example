@@ -36,7 +36,7 @@ object Main extends IOApp {
         monad.unit(
           ValuedEndpointOutput(
             statusCode.and(jsonBody[ApiError]),
-            (StatusCode.VariantAlsoNegotiates, ApiError(ctx.e.toString))
+            (StatusCode(1337), ApiError(ctx.e.toString))
           ).some
         )
     })
@@ -58,7 +58,7 @@ object Main extends IOApp {
           _ <- IO.println(
             s"Go to http://localhost:${server.address.getPort}/docs to open SwaggerUI. Press ENTER key to exit."
           )
-//          _ <- IO.readLine
+          _ <- IO.readLine
         } yield ()
       }
       .as(ExitCode.Success)
