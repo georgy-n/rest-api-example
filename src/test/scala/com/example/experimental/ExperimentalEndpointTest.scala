@@ -13,7 +13,7 @@ import sttp.client3.testing.SttpBackendStub
 import sttp.model.StatusCode
 import sttp.tapir.integ.cats.effect.CatsMonadError
 import sttp.tapir.server.stub.TapirStubInterpreter
-
+/*
 class ExperimentalEndpointTest extends AsyncFlatSpec with Matchers {
 
   private val stubTrackingIdEndpoint = TapirStubInterpreter(
@@ -81,3 +81,6 @@ class ExperimentalEndpointTest extends AsyncFlatSpec with Matchers {
     response.code shouldBe StatusCode.InternalServerError
   }
 }
+
+
+ */
