@@ -9,7 +9,7 @@ import com.example.domain.ApiError
 import com.example.experimental.api.ExperimentalApi
 import io.circe.generic.auto._
 import org.http4s.ember.server.EmberServerBuilder
-import org.http4s.server.Router
+import org.http4s.server.{DefaultServiceErrorHandler, Router}
 import sttp.model.StatusCode
 import sttp.monad.MonadError
 import sttp.tapir._
@@ -17,6 +17,7 @@ import sttp.tapir.generic.auto._
 import sttp.tapir.json.circe.jsonBody
 import sttp.tapir.server.ServerEndpoint
 import sttp.tapir.server.http4s.{Http4sServerInterpreter, Http4sServerOptions}
+import sttp.tapir.server.interceptor.decodefailure.DefaultDecodeFailureHandler
 import sttp.tapir.server.interceptor.exception.{ExceptionContext, ExceptionHandler}
 import sttp.tapir.server.model.ValuedEndpointOutput
 import sttp.tapir.swagger.bundle.SwaggerInterpreter

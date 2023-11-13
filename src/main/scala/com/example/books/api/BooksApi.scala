@@ -32,13 +32,8 @@ object BooksApi {
       .in(path[String]("id"))
       .out(jsonBody[Book])
       .errorOutVariants(
-        oneOfVariant(
-          statusCode(StatusCode.NotFound).and(jsonBody[BookError.NotFound])
-        ),
-        oneOfVariant(
-          statusCode(StatusCode.ServiceUnavailable)
-            .and(jsonBody[BookError.Failed])
-        )
+        oneOfVariant(StatusCode.NotFound, jsonBody[BookError.NotFound]),
+        oneOfVariant(StatusCode.ServiceUnavailable, jsonBody[BookError.Failed])
       )
 
   val createBook: PublicEndpoint[BookForm, CommonApiError, Book, Any] =

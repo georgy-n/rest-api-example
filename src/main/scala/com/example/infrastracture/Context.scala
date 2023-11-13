@@ -14,7 +14,7 @@ object Context {
   }
 
   def generate: Context = {
-    val rnd = Random.nextString(3)
+    val rnd = Random.nextInt(500).toString
     Context(rnd)
   }
 }
